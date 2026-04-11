@@ -118,13 +118,19 @@ export default function OrigamiDetailScreen() {
           <TouchableOpacity
             testID="video-section-btn"
             style={[styles.videoSection, !canAccessVideo && styles.videoLocked]}
-            onPress={() => { if (!canAccessVideo) router.push('/subscription'); }}
+            onPress={() => {
+              if (canAccessVideo) {
+                router.push({ pathname: '/video', params: { id: origami.id } });
+              } else {
+                router.push('/subscription');
+              }
+            }}
             activeOpacity={0.8}
           >
             <Ionicons name={canAccessVideo ? 'play-circle' : 'lock-closed'} size={28} color={canAccessVideo ? Colors.primary : '#94A3B8'} />
             <View style={{ flex: 1 }}>
               <Text style={styles.videoTitle}>{canAccessVideo ? 'Watch Video Tutorial' : 'Premium Video Locked'}</Text>
-              <Text style={styles.videoSubtitle}>{canAccessVideo ? 'Follow along with the instructor' : 'Subscribe to unlock video tutorials'}</Text>
+              <Text style={styles.videoSubtitle}>{canAccessVideo ? 'Follow along with the AI instructor' : 'Subscribe to unlock video tutorials'}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
           </TouchableOpacity>

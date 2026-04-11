@@ -11,6 +11,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="origami/[id]" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="video" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="subscription" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
       </Stack>
     </AuthProvider>
