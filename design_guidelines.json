@@ -1,0 +1,104 @@
+{
+  "theme": "Light",
+  "archetype": "6 (Vibrant Play)",
+  "emotional_tone": "Magical, Encouraging, Playful, Gamified",
+  "design_philosophy": "Kid-friendly Duolingo style. Bright, large touch targets, highly tactile elements mimicking paper folding. Emphasize progression and reward. Focus on 'Thumb-friendly' layout and bottom-sheet navigation for ease of use.",
+  "colors": {
+    "background_primary": "#FDFAFC",
+    "surface_card": "#FFFFFF",
+    "primary": "#38BDF8",
+    "primary_hover": "#0284C7",
+    "secondary": "#FDE047",
+    "secondary_hover": "#FACC15",
+    "accent_success": "#4ADE80",
+    "accent_danger_heart": "#FB7185",
+    "text_main": "#1E293B",
+    "text_muted": "#64748B",
+    "border_color": "#E2E8F0"
+  },
+  "typography": {
+    "font_family_heading": "Fredoka, sans-serif",
+    "font_family_body": "Nunito, sans-serif",
+    "h1": "text-4xl sm:text-5xl font-black tracking-tight leading-tight",
+    "h2": "text-2xl sm:text-3xl font-bold tracking-tight",
+    "h3": "text-xl sm:text-2xl font-bold",
+    "body_large": "text-lg sm:text-xl font-medium leading-relaxed",
+    "body": "text-base font-medium leading-relaxed",
+    "label": "text-sm font-bold uppercase tracking-widest",
+    "button": "text-lg font-bold"
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-6 sm:p-8",
+    "card_padding": "p-6",
+    "gap_standard": "gap-6",
+    "gap_large": "gap-12",
+    "border_radius_card": "rounded-3xl",
+    "border_radius_button": "rounded-full",
+    "grid_bento": "grid-cols-1 md:grid-cols-2 gap-6"
+  },
+  "motion_and_interactions": {
+    "button_active": "active:scale-95 active:translate-y-1 transition-transform",
+    "card_hover": "hover:-translate-y-1 transition-transform duration-300 ease-out",
+    "page_transition": "animate-in fade-in slide-in-from-bottom-4 duration-500",
+    "feedback_success": "scale-110 rotate-3 transition-transform duration-200"
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#38BDF8] text-white border-b-4 border-[#0284C7] rounded-full px-8 py-4 text-lg font-bold active:border-b-0 active:mt-1",
+      "secondary": "bg-[#FDE047] text-[#1E293B] border-b-4 border-[#FACC15] rounded-full px-8 py-4 text-lg font-bold active:border-b-0 active:mt-1"
+    },
+    "cards": {
+      "default": "bg-white border-2 border-[#E2E8F0] border-b-4 rounded-3xl p-6 shadow-sm",
+      "premium": "bg-gradient-to-br from-[#FDE047] to-[#FEF08A] border-2 border-[#FACC15] border-b-4 rounded-3xl p-6"
+    },
+    "navigation": {
+      "bottom_tab": "fixed bottom-0 w-full bg-white border-t-2 border-[#E2E8F0] pb-safe pt-2 px-6 flex justify-between items-center rounded-t-3xl"
+    },
+    "progress_bar": {
+      "container": "h-4 w-full bg-[#E2E8F0] rounded-full overflow-hidden",
+      "fill": "h-full bg-[#4ADE80] rounded-full"
+    },
+    "testing": "All interactive elements MUST include a data-testid attribute in kebab-case (e.g. data-testid=\"start-learning-button\")."
+  },
+  "media": {
+    "icons_library": "lucide-react",
+    "images": [
+      {
+        "category": "Home Hero / Onboarding",
+        "description": "Two colorful origami bears facing each other, establishing a friendly, tactile connection.",
+        "url": "https://images.unsplash.com/photo-1760035303523-825b45bd5cb5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwxfHxjb2xvcmZ1bCUyMG9yaWdhbWklMjBhbmltYWxzfGVufDB8fHx8MTc3NTkzNDQzM3ww&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "category": "Browse Section / Skill Levels",
+        "description": "Five assorted-color elephant origamis, ideal for showing 'Intermediate' or 'Advanced' levels.",
+        "url": "https://images.unsplash.com/photo-1574891934268-6287cda565b9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwzfHxjb2xvcmZ1bCUyMG9yaWdhbWklMjBhbmltYWxzfGVufDB8fHx8MTc3NTkzNDQzM3ww&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "category": "Profile / Favorites / Achievements",
+        "description": "Pink origami in front of other color origamis. Vibrant and cheerful.",
+        "url": "https://images.unsplash.com/photo-1563261472-835d2b75b8f2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwyfHxjb2xvcmZ1bCUyMG9yaWdhbWklMjBhbmltYWxzfGVufDB8fHx8MTc3NTkzNDQzM3ww&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "category": "Payment / Subscription (PayPal)",
+        "description": "PayPal logo for premium video checkout flow.",
+        "url": "https://images.pexels.com/photos/5437587/pexels-photo-5437587.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+      },
+      {
+        "category": "Payment / Subscription (Apple Pay)",
+        "description": "Apple Pay logo for premium video checkout flow.",
+        "url": "https://images.unsplash.com/photo-1618242556516-6858a8f34cb0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwxfHxhcHBsZSUyMHBheSUyMGxvZ28lMjB3aGl0ZSUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzc1OTM0NDMzfDA&ixlib=rb-4.1.0&q=85"
+      }
+    ]
+  },
+  "instructions_to_main_agent": {
+    "1": "Use the Duolingo gamification strategy: chunky 3D-like buttons (using bottom borders to simulate depth), large rounded cards, and highly visible progress bars.",
+    "2": "Fonts are critical. Use Fredoka for headings to maintain the youthful, friendly vibe, and Nunito for all body text.",
+    "3": "Always apply generous padding (p-6 or p-8) around the main content so kids don't misclick.",
+    "4": "The app structure must have a bottom tab bar containing Home, Browse, Seasonal, Profile.",
+    "5": "Incorporate the image URLs provided in the media section to avoid any placeholder graphics. Use the colorful origami images for category headers and seasonal features.",
+    "6": "Ensure contrast ratios are met for text over colored backgrounds. The #1E293B text color is preferred over stark black.",
+    "7": "Do NOT use standard boring input fields. Gamify the onboarding flow (e.g. 'What's your skill level?' using massive tap-able cards with icons).",
+    "8": "For the Premium Video paywall, clearly present the 1-month trial and display the provided PayPal and Apple Pay logos using standard image components.",
+    "9": "Every clickable/interactive element MUST have a 'data-testid' prop for testing."
+  }
+}
