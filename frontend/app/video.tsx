@@ -164,10 +164,14 @@ export default function VideoPlayerScreen() {
   // Determine video/audio URLs
   let videoUrl = '';
   let audioUrl = '';
-  if (hasPerStep && stepVideos[currentStep]) {
-    videoUrl = `${BASE_URL}/api/videos/${stepVideos[currentStep]}`;
+  if (hasPerStep) {
+    // Per-step mode: only use per-step videos, fallback visual for missing steps
+    if (stepVideos[currentStep]) {
+      videoUrl = `${BASE_URL}/api/videos/${stepVideos[currentStep]}`;
+    }
     audioUrl = stepAudios[currentStep] ? `${BASE_URL}/api/audio/${stepAudios[currentStep]}` : '';
   } else if (origami.video_file) {
+    // Legacy single-video mode
     videoUrl = `${BASE_URL}/api/videos/${origami.video_file}`;
     audioUrl = origami.audio_file ? `${BASE_URL}/api/audio/${origami.audio_file}` : '';
   }

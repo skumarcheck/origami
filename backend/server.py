@@ -441,22 +441,24 @@ async def activate_subscription(user: dict = Depends(get_current_user)):
 executor = ThreadPoolExecutor(max_workers=2)
 
 def _generate_step_video_sync(origami_title, origami_id, step_num, instruction):
-    """Generate a Sora 2 video for a single origami step."""
+    """Generate a Sora 2 video for a single origami step with ultra-specific prompt."""
     from emergentintegrations.llm.openai.video_generation import OpenAIVideoGeneration
     video_gen = OpenAIVideoGeneration(api_key=os.environ['EMERGENT_LLM_KEY'])
+    # Craft a precise visual description from the instruction
+    action = instruction.lower().rstrip('.')
     prompt = (
-        f"A friendly young woman sitting at a clean white desk, silently demonstrating origami. "
-        f"She is visible from the waist up, smiling warmly but not talking. "
-        f"She is {instruction.lower()} "
-        f"No talking, no dialogue, her lips are closed. Only her hands and body move. "
-        f"Colorful origami paper on the desk. Bright natural lighting, warm cozy room. "
-        f"Professional kid-friendly craft tutorial style."
+        f"A friendly young woman sitting at a clean white desk, visible from waist up. "
+        f"She is silently and carefully {action}. "
+        f"Her hands move slowly and deliberately, showing each fold clearly. "
+        f"Colorful origami paper on the desk. She does not talk, her lips stay closed. "
+        f"Bright natural lighting, warm cozy room, professional origami tutorial. "
+        f"Camera angle shows both her face and her hands working on the paper."
     )
     if len(prompt) > 900:
         prompt = prompt[:900]
     output_path = f"/app/backend/videos/{origami_id}_step_{step_num}.mp4"
     video_bytes = video_gen.text_to_video(
-        prompt=prompt, model="sora-2", size="1280x720", duration=4, max_wait_time=600,
+        prompt=prompt, model="sora-2", size="1280x720", duration=8, max_wait_time=900,
     )
     if video_bytes:
         video_gen.save_video(video_bytes, output_path)
