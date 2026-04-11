@@ -437,47 +437,81 @@ async def activate_subscription(user: dict = Depends(get_current_user)):
     )
     return {"status": "active", "message": "Subscription activated successfully!"}
 
-# ============ VIDEO & AUDIO GENERATION ============
+# ============ VIDEO & AUDIO GENERATION (PER-STEP) ============
 executor = ThreadPoolExecutor(max_workers=2)
 
-def _generate_video_sync(origami_title, origami_id):
-    """Generate a Sora 2 video synchronously."""
+def _generate_step_video_sync(origami_title, origami_id, step_num, instruction):
+    """Generate a Sora 2 video for a single origami step."""
     from emergentintegrations.llm.openai.video_generation import OpenAIVideoGeneration
     video_gen = OpenAIVideoGeneration(api_key=os.environ['EMERGENT_LLM_KEY'])
     prompt = (
-        f"A friendly young woman sitting at a clean white desk, carefully demonstrating "
-        f"how to fold a paper {origami_title} step by step. Close-up shots of her hands "
-        f"folding colorful origami paper. Bright, well-lit room with natural sunlight. "
-        f"Kid-friendly tutorial style, warm and encouraging atmosphere."
+        f"Close-up of a woman's hands on a clean white desk, silently demonstrating origami. "
+        f"She is {instruction.lower()} "
+        f"No talking, no dialogue, completely silent demonstration. "
+        f"Colorful origami paper, bright natural lighting, professional craft tutorial. "
+        f"Smooth deliberate hand movements, kid-friendly style."
     )
-    output_path = f"/app/backend/videos/{origami_id}.mp4"
+    if len(prompt) > 900:
+        prompt = prompt[:900]
+    output_path = f"/app/backend/videos/{origami_id}_step_{step_num}.mp4"
     video_bytes = video_gen.text_to_video(
-        prompt=prompt, model="sora-2", size="1280x720", duration=8, max_wait_time=600,
+        prompt=prompt, model="sora-2", size="1280x720", duration=4, max_wait_time=600,
     )
     if video_bytes:
         video_gen.save_video(video_bytes, output_path)
-        return f"{origami_id}.mp4"
+        return f"{origami_id}_step_{step_num}.mp4"
     return None
 
-async def _generate_audio(origami_title, steps, origami_id):
-    """Generate TTS narration for an origami tutorial."""
+async def _generate_step_audio(origami_title, step, origami_id, step_num, is_first, is_last):
+    """Generate TTS narration for a single step."""
     from emergentintegrations.llm.openai import OpenAITextToSpeech
     tts = OpenAITextToSpeech(api_key=os.environ['EMERGENT_LLM_KEY'])
-    script = f"Welcome to the {origami_title} tutorial! Let's fold this together. "
-    for s in steps:
-        script += f"Step {s['step_number']}: {s['title']}. {s['instruction']} "
-        if s.get('tip'):
-            script += f"Tip: {s['tip']} "
-    script += f"Great job! You completed the {origami_title}!"
-    if len(script) > 4000:
-        script = script[:4000]
+    script = ""
+    if is_first:
+        script += f"Welcome to the {origami_title} tutorial! "
+    script += f"Step {step['step_number']}: {step['title']}. {step['instruction']} "
+    if step.get('tip'):
+        script += f"Here's a tip: {step['tip']} "
+    if is_last:
+        script += f"Amazing! You've completed the {origami_title}! Great job!"
     audio_bytes = await tts.generate_speech(
         text=script, model="tts-1", voice="shimmer", speed=0.9, response_format="mp3",
     )
-    output_path = f"/app/backend/audio/{origami_id}.mp3"
+    output_path = f"/app/backend/audio/{origami_id}_step_{step_num}.mp3"
     with open(output_path, "wb") as f:
         f.write(audio_bytes)
-    return f"{origami_id}.mp3"
+    return f"{origami_id}_step_{step_num}.mp3"
+
+@api_router.post("/admin/generate-step-media/{origami_id}")
+async def generate_step_media(origami_id: str, user: dict = Depends(get_current_user)):
+    """Generate per-step videos + audio for an origami project."""
+    origami = await db.origami.find_one({"id": origami_id}, {"_id": 0})
+    if not origami:
+        raise HTTPException(status_code=404, detail="Origami not found")
+    steps = origami.get("steps", [])
+    if not steps:
+        raise HTTPException(status_code=400, detail="No steps found")
+    step_videos = []
+    step_audio = []
+    total = len(steps)
+    for i, step in enumerate(steps):
+        sn = step["step_number"]
+        logger.info(f"[{origami_id}] Generating step {sn}/{total} video...")
+        loop = asyncio.get_event_loop()
+        vf = await loop.run_in_executor(executor, _generate_step_video_sync, origami["title"], origami_id, sn, step["instruction"])
+        step_videos.append(vf)
+        logger.info(f"[{origami_id}] Generating step {sn}/{total} audio...")
+        af = await _generate_step_audio(origami["title"], step, origami_id, sn, i == 0, i == total - 1)
+        step_audio.append(af)
+        logger.info(f"[{origami_id}] Step {sn}/{total} done!")
+    await db.origami.update_one({"id": origami_id}, {"$set": {
+        "step_videos": step_videos,
+        "step_audio": step_audio,
+        "has_video": True,
+        "is_premium": True,
+    }})
+    logger.info(f"[{origami_id}] All {total} steps generated!")
+    return {"status": "success", "step_videos": step_videos, "step_audio": step_audio}
 
 @api_router.post("/admin/generate-video/{origami_id}")
 async def generate_video_endpoint(origami_id: str, user: dict = Depends(get_current_user)):
@@ -486,11 +520,10 @@ async def generate_video_endpoint(origami_id: str, user: dict = Depends(get_curr
         raise HTTPException(status_code=404, detail="Origami not found")
     logger.info(f"Starting video generation for {origami_id}...")
     loop = asyncio.get_event_loop()
-    video_file = await loop.run_in_executor(executor, _generate_video_sync, origami["title"], origami_id)
-    if video_file:
-        await db.origami.update_one({"id": origami_id}, {"$set": {"video_file": video_file, "has_video": True, "is_premium": True}})
-        logger.info(f"Video generated: {video_file}")
-        return {"status": "success", "video_file": video_file}
+    vf = await loop.run_in_executor(executor, _generate_step_video_sync, origami["title"], origami_id, 1, origami["steps"][0]["instruction"] if origami.get("steps") else "folding paper")
+    if vf:
+        await db.origami.update_one({"id": origami_id}, {"$set": {"video_file": vf, "has_video": True, "is_premium": True}})
+        return {"status": "success", "video_file": vf}
     raise HTTPException(status_code=500, detail="Video generation failed")
 
 @api_router.post("/admin/generate-audio/{origami_id}")
@@ -498,13 +531,12 @@ async def generate_audio_endpoint(origami_id: str, user: dict = Depends(get_curr
     origami = await db.origami.find_one({"id": origami_id}, {"_id": 0})
     if not origami:
         raise HTTPException(status_code=404, detail="Origami not found")
-    logger.info(f"Starting audio generation for {origami_id}...")
-    audio_file = await _generate_audio(origami["title"], origami.get("steps", []), origami_id)
-    if audio_file:
-        await db.origami.update_one({"id": origami_id}, {"$set": {"audio_file": audio_file}})
-        logger.info(f"Audio generated: {audio_file}")
-        return {"status": "success", "audio_file": audio_file}
-    raise HTTPException(status_code=500, detail="Audio generation failed")
+    steps = origami.get("steps", [])
+    if steps:
+        af = await _generate_step_audio(origami["title"], steps[0], origami_id, 1, True, len(steps) == 1)
+        await db.origami.update_one({"id": origami_id}, {"$set": {"audio_file": af}})
+        return {"status": "success", "audio_file": af}
+    raise HTTPException(status_code=500, detail="No steps to generate audio for")
 
 
 # ============ SEED DATABASE ============

@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Video, ResizeMode, Audio } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useAudioPlayer } from 'expo-audio';
 import { apiCall } from '../utils/api';
 import { Colors } from '../utils/colors';
 
@@ -20,90 +21,89 @@ export default function VideoPlayerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [origami, setOrigami] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const videoRef = useRef<Video>(null);
-  const audioRef = useRef<Audio.Sound | null>(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [audioLoaded, setAudioLoaded] = useState(false);
-  const [videoPosition, setVideoPosition] = useState(0);
-  const [videoDuration, setVideoDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  useEffect(() => {
-    loadOrigami();
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.unloadAsync();
-      }
-    };
-  }, []);
+  useEffect(() => { loadOrigami(); }, []);
 
   async function loadOrigami() {
     try {
       const data = await apiCall(`/origami/${id}`);
       setOrigami(data);
-      if (data.audio_file) {
-        await loadAudio(data.audio_file);
-      }
     } catch (e) { console.error(e); }
   }
 
-  async function loadAudio(audioFile: string) {
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: `${BASE_URL}/api/audio/${audioFile}` },
-        { shouldPlay: false }
-      );
-      audioRef.current = sound;
-      setAudioLoaded(true);
-    } catch (e) { console.error('Audio load error:', e); }
+  // Get video/audio URLs for current step
+  const stepVideos = origami?.step_videos || [];
+  const stepAudios = origami?.step_audio || [];
+  const hasPerStepMedia = stepVideos.length > 0;
+
+  // Determine current media URLs
+  const videoUrl = hasPerStepMedia && stepVideos[currentStep]
+    ? `${BASE_URL}/api/videos/${stepVideos[currentStep]}`
+    : origami?.video_file
+      ? `${BASE_URL}/api/videos/${origami.video_file}`
+      : null;
+
+  const audioUrl = hasPerStepMedia && stepAudios[currentStep]
+    ? `${BASE_URL}/api/audio/${stepAudios[currentStep]}`
+    : origami?.audio_file
+      ? `${BASE_URL}/api/audio/${origami.audio_file}`
+      : null;
+
+  // Video player
+  const videoPlayer = useVideoPlayer(videoUrl || '', (player) => {
+    player.loop = false;
+    player.muted = true; // Mute video - only TTS audio should play
+  });
+
+  // Audio player
+  const audioPlayer = useAudioPlayer(audioUrl || '');
+
+  function handlePlay() {
+    if (videoPlayer) videoPlayer.play();
+    if (audioPlayer) audioPlayer.play();
+    setIsPlaying(true);
   }
 
-  async function togglePlay() {
-    if (!origami) return;
+  function handlePause() {
+    if (videoPlayer) videoPlayer.pause();
+    if (audioPlayer) audioPlayer.pause();
+    setIsPlaying(false);
+  }
+
+  function togglePlay() {
     if (isPlaying) {
-      await videoRef.current?.pauseAsync();
-      await audioRef.current?.pauseAsync();
-      setIsPlaying(false);
+      handlePause();
     } else {
-      await videoRef.current?.playAsync();
-      await audioRef.current?.playAsync();
-      setIsPlaying(true);
+      handlePlay();
     }
   }
 
-  async function seekToStep(stepIndex: number) {
+  function goToStep(stepIndex: number) {
+    handlePause();
     setCurrentStep(stepIndex);
-    if (videoDuration > 0 && origami?.steps?.length) {
-      const stepDuration = videoDuration / origami.steps.length;
-      const position = stepIndex * stepDuration;
-      await videoRef.current?.setPositionMillis(position);
-      await audioRef.current?.setPositionMillis(position);
-    }
+    setIsPlaying(false);
   }
 
-  function handleVideoStatus(status: any) {
-    if (status.isLoaded) {
-      setVideoLoaded(true);
-      setVideoPosition(status.positionMillis || 0);
-      setVideoDuration(status.durationMillis || 0);
-      if (status.durationMillis && origami?.steps?.length) {
-        const stepDuration = status.durationMillis / origami.steps.length;
-        const newStep = Math.min(Math.floor((status.positionMillis || 0) / stepDuration), origami.steps.length - 1);
-        if (newStep !== currentStep) setCurrentStep(newStep);
+  // Auto-play when step changes (after a brief delay for media to load)
+  useEffect(() => {
+    if (origami && hasPerStepMedia) {
+      const url = stepVideos[currentStep]
+        ? `${BASE_URL}/api/videos/${stepVideos[currentStep]}`
+        : null;
+      if (url && videoPlayer) {
+        videoPlayer.replace(url);
+        videoPlayer.muted = true;
       }
-      if (status.didJustFinish) {
-        setIsPlaying(false);
+      const aUrl = stepAudios[currentStep]
+        ? `${BASE_URL}/api/audio/${stepAudios[currentStep]}`
+        : null;
+      if (aUrl && audioPlayer) {
+        audioPlayer.replace(aUrl);
       }
     }
-  }
-
-  function formatTime(ms: number) {
-    const total = Math.floor(ms / 1000);
-    const m = Math.floor(total / 60);
-    const s = total % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  }
+  }, [currentStep, origami]);
 
   if (!origami) {
     return (
@@ -116,8 +116,7 @@ export default function VideoPlayerScreen() {
 
   const steps = origami.steps || [];
   const step = steps[currentStep] || steps[0];
-  const hasRealVideo = !!origami.video_file;
-  const progress = videoDuration > 0 ? videoPosition / videoDuration : 0;
+  const hasVideo = !!videoUrl;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -132,16 +131,12 @@ export default function VideoPlayerScreen() {
 
       {/* Video area */}
       <View style={styles.videoArea}>
-        {hasRealVideo ? (
-          <Video
-            ref={videoRef}
-            source={{ uri: `${BASE_URL}/api/videos/${origami.video_file}` }}
+        {hasVideo ? (
+          <VideoView
+            player={videoPlayer}
             style={styles.videoPlayer}
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay={false}
-            isLooping={false}
-            onPlaybackStatusUpdate={handleVideoStatus}
-            useNativeControls={false}
+            contentFit="contain"
+            nativeControls={false}
           />
         ) : (
           <View style={[styles.videoFallback, { backgroundColor: origami.color + '15' }]}>
@@ -153,53 +148,55 @@ export default function VideoPlayerScreen() {
           </View>
         )}
 
-        {/* AI Instructor badge */}
+        {/* AI Video badge */}
         <View style={styles.aiBadge}>
           <Ionicons name="sparkles" size={14} color={Colors.white} />
-          <Text style={styles.aiBadgeText}>{hasRealVideo ? 'AI Video' : 'AI Instructor'}</Text>
+          <Text style={styles.aiBadgeText}>{hasPerStepMedia ? `Step ${currentStep + 1}/${steps.length}` : 'AI Video'}</Text>
         </View>
 
-        {/* Play overlay (only when paused) */}
-        {!isPlaying && (
-          <TouchableOpacity testID="video-play-btn" style={styles.playOverlay} onPress={togglePlay} activeOpacity={0.8}>
+        {/* Play/pause overlay */}
+        <TouchableOpacity testID="video-play-btn" style={styles.playOverlay} onPress={togglePlay} activeOpacity={0.9}>
+          {!isPlaying && (
             <View style={styles.playCircle}>
               <Ionicons name="play" size={36} color={Colors.white} />
             </View>
-          </TouchableOpacity>
-        )}
-
-        {/* Tap to pause when playing */}
-        {isPlaying && (
-          <TouchableOpacity style={styles.playOverlay} onPress={togglePlay} activeOpacity={1} />
-        )}
+          )}
+        </TouchableOpacity>
       </View>
 
-      {/* Instruction overlay */}
+      {/* Step instruction */}
       <View style={styles.instructionBar}>
         <Text style={styles.stepLabel}>Step {currentStep + 1}: {step?.title}</Text>
-        <Text style={styles.instructionText} numberOfLines={2}>{step?.instruction}</Text>
-      </View>
-
-      {/* Progress bar */}
-      <View style={styles.progressSection}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: origami.color }]} />
-        </View>
-        <View style={styles.timeRow}>
-          <Text style={styles.timeText}>{formatTime(videoPosition)}</Text>
-          <Text style={styles.timeText}>{formatTime(videoDuration)}</Text>
-        </View>
+        <Text style={styles.instructionText} numberOfLines={3}>{step?.instruction}</Text>
+        {step?.tip && (
+          <View style={styles.tipRow}>
+            <Ionicons name="bulb" size={14} color="#EAB308" />
+            <Text style={styles.tipText}>{step.tip}</Text>
+          </View>
+        )}
       </View>
 
       {/* Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity testID="video-prev-btn" style={styles.controlBtn} onPress={() => currentStep > 0 && seekToStep(currentStep - 1)} disabled={currentStep === 0}>
+        <TouchableOpacity
+          testID="video-prev-btn"
+          style={styles.controlBtn}
+          onPress={() => currentStep > 0 && goToStep(currentStep - 1)}
+          disabled={currentStep === 0}
+        >
           <Ionicons name="play-skip-back" size={24} color={currentStep === 0 ? '#475569' : Colors.white} />
         </TouchableOpacity>
+
         <TouchableOpacity testID="video-toggle-btn" style={[styles.mainPlayBtn, { backgroundColor: origami.color }]} onPress={togglePlay}>
           <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color={Colors.white} />
         </TouchableOpacity>
-        <TouchableOpacity testID="video-next-btn" style={styles.controlBtn} onPress={() => currentStep < steps.length - 1 && seekToStep(currentStep + 1)} disabled={currentStep >= steps.length - 1}>
+
+        <TouchableOpacity
+          testID="video-next-btn"
+          style={styles.controlBtn}
+          onPress={() => currentStep < steps.length - 1 && goToStep(currentStep + 1)}
+          disabled={currentStep >= steps.length - 1}
+        >
           <Ionicons name="play-skip-forward" size={24} color={currentStep >= steps.length - 1 ? '#475569' : Colors.white} />
         </TouchableOpacity>
       </View>
@@ -212,7 +209,7 @@ export default function VideoPlayerScreen() {
             key={i}
             testID={`video-step-${i}`}
             style={[styles.stepRow, i === currentStep && { backgroundColor: origami.color + '15', borderColor: origami.color + '40' }]}
-            onPress={() => seekToStep(i)}
+            onPress={() => goToStep(i)}
             activeOpacity={0.7}
           >
             <View style={[styles.stepDot, i === currentStep && { backgroundColor: origami.color }, i < currentStep && { backgroundColor: Colors.success }]}>
@@ -259,15 +256,12 @@ const styles = StyleSheet.create({
   aiBadgeText: { color: Colors.white, fontSize: 12, fontWeight: '700' },
   playOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
   playCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
-  instructionBar: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#1E293B', marginHorizontal: 16, borderBottomLeftRadius: 12, borderBottomRightRadius: 12 },
+  instructionBar: { paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#1E293B', marginHorizontal: 16, borderBottomLeftRadius: 12, borderBottomRightRadius: 12 },
   stepLabel: { color: Colors.primary, fontSize: 13, fontWeight: '800' },
   instructionText: { color: '#CBD5E1', fontSize: 14, fontWeight: '600', marginTop: 4, lineHeight: 20 },
-  progressSection: { paddingHorizontal: 20, paddingTop: 10 },
-  progressBar: { height: 4, backgroundColor: '#334155', borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 2 },
-  timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  timeText: { color: '#94A3B8', fontSize: 12, fontWeight: '600' },
-  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24, paddingVertical: 10 },
+  tipRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: '#F59E0B15', padding: 8, borderRadius: 8 },
+  tipText: { color: '#FDE047', fontSize: 12, fontWeight: '600', flex: 1 },
+  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24, paddingVertical: 12 },
   controlBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   mainPlayBtn: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
   stepList: { flex: 1, paddingHorizontal: 16 },
