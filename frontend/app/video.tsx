@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Video, ResizeMode, Audio } from 'expo-av';
 import { apiCall } from '../utils/api';
 import { Colors } from '../utils/colors';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   bird: 'paper-plane', airplane: 'airplane', boat: 'boat', paw: 'paw',
@@ -21,92 +22,102 @@ export default function VideoPlayerScreen() {
   const [origami, setOrigami] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const STEP_DURATION = 8; // seconds per step
+  const videoRef = useRef<Video>(null);
+  const audioRef = useRef<Audio.Sound | null>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [audioLoaded, setAudioLoaded] = useState(false);
+  const [videoPosition, setVideoPosition] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
 
   useEffect(() => {
     loadOrigami();
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.unloadAsync();
+      }
+    };
   }, []);
 
   async function loadOrigami() {
     try {
       const data = await apiCall(`/origami/${id}`);
       setOrigami(data);
+      if (data.audio_file) {
+        await loadAudio(data.audio_file);
+      }
     } catch (e) { console.error(e); }
   }
 
-  useEffect(() => {
-    if (isPlaying && origami) {
-      timerRef.current = setInterval(() => {
-        setElapsedTime(prev => {
-          const next = prev + 1;
-          const totalDuration = (origami.steps?.length || 1) * STEP_DURATION;
-          if (next >= totalDuration) {
-            setIsPlaying(false);
-            if (timerRef.current) clearInterval(timerRef.current);
-            return totalDuration;
-          }
-          const newStep = Math.floor(next / STEP_DURATION);
-          if (newStep !== currentStep) {
-            setCurrentStep(newStep);
-            animateStepTransition();
-          }
-          return next;
-        });
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [isPlaying, origami]);
-
-  function animateStepTransition() {
-    Animated.sequence([
-      Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-      Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
-    ]).start();
+  async function loadAudio(audioFile: string) {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: `${BASE_URL}/api/audio/${audioFile}` },
+        { shouldPlay: false }
+      );
+      audioRef.current = sound;
+      setAudioLoaded(true);
+    } catch (e) { console.error('Audio load error:', e); }
   }
 
-  function togglePlay() {
+  async function togglePlay() {
     if (!origami) return;
-    const totalDuration = (origami.steps?.length || 1) * STEP_DURATION;
-    if (elapsedTime >= totalDuration) {
-      setElapsedTime(0);
-      setCurrentStep(0);
+    if (isPlaying) {
+      await videoRef.current?.pauseAsync();
+      await audioRef.current?.pauseAsync();
+      setIsPlaying(false);
+    } else {
+      await videoRef.current?.playAsync();
+      await audioRef.current?.playAsync();
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   }
 
-  function seekToStep(stepIndex: number) {
+  async function seekToStep(stepIndex: number) {
     setCurrentStep(stepIndex);
-    setElapsedTime(stepIndex * STEP_DURATION);
-    animateStepTransition();
+    if (videoDuration > 0 && origami?.steps?.length) {
+      const stepDuration = videoDuration / origami.steps.length;
+      const position = stepIndex * stepDuration;
+      await videoRef.current?.setPositionMillis(position);
+      await audioRef.current?.setPositionMillis(position);
+    }
   }
 
-  function formatTime(seconds: number) {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
+  function handleVideoStatus(status: any) {
+    if (status.isLoaded) {
+      setVideoLoaded(true);
+      setVideoPosition(status.positionMillis || 0);
+      setVideoDuration(status.durationMillis || 0);
+      if (status.durationMillis && origami?.steps?.length) {
+        const stepDuration = status.durationMillis / origami.steps.length;
+        const newStep = Math.min(Math.floor((status.positionMillis || 0) / stepDuration), origami.steps.length - 1);
+        if (newStep !== currentStep) setCurrentStep(newStep);
+      }
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+      }
+    }
+  }
+
+  function formatTime(ms: number) {
+    const total = Math.floor(ms / 1000);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   if (!origami) {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
-        <Text style={styles.loadingText}>Loading video...</Text>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Loading tutorial...</Text>
       </View>
     );
   }
 
   const steps = origami.steps || [];
-  const totalDuration = steps.length * STEP_DURATION;
-  const progress = totalDuration > 0 ? elapsedTime / totalDuration : 0;
   const step = steps[currentStep] || steps[0];
-  const isFinished = elapsedTime >= totalDuration;
+  const hasRealVideo = !!origami.video_file;
+  const progress = videoDuration > 0 ? videoPosition / videoDuration : 0;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -121,62 +132,52 @@ export default function VideoPlayerScreen() {
 
       {/* Video area */}
       <View style={styles.videoArea}>
-        <View style={[styles.videoDisplay, { backgroundColor: origami.color + '15' }]}>
-          {/* AI Instructor badge */}
-          <View style={styles.aiBadge}>
-            <Ionicons name="sparkles" size={14} color={Colors.white} />
-            <Text style={styles.aiBadgeText}>AI Instructor</Text>
+        {hasRealVideo ? (
+          <Video
+            ref={videoRef}
+            source={{ uri: `${BASE_URL}/api/videos/${origami.video_file}` }}
+            style={styles.videoPlayer}
+            resizeMode={ResizeMode.CONTAIN}
+            shouldPlay={false}
+            isLooping={false}
+            onPlaybackStatusUpdate={handleVideoStatus}
+            useNativeControls={false}
+          />
+        ) : (
+          <View style={[styles.videoFallback, { backgroundColor: origami.color + '15' }]}>
+            <View style={[styles.bigStepCircle, { backgroundColor: origami.color + '30', borderColor: origami.color }]}>
+              <Text style={[styles.bigStepNum, { color: origami.color }]}>{currentStep + 1}</Text>
+            </View>
+            <Text style={[styles.fallbackTitle, { color: origami.color }]}>{step?.title}</Text>
+            <Ionicons name={ICON_MAP[origami.icon_name] || 'diamond'} size={40} color={origami.color} />
           </View>
+        )}
 
-          {/* Visual content area */}
-          <View style={styles.visualArea}>
-            <Animated.View style={[styles.stepVisual, { opacity: fadeAnim }]}>
-              <View style={[styles.bigStepCircle, { backgroundColor: origami.color + '30', borderColor: origami.color }]}>
-                <Text style={[styles.bigStepNum, { color: origami.color }]}>{currentStep + 1}</Text>
-              </View>
-              <Text style={[styles.visualStepTitle, { color: origami.color }]}>{step?.title}</Text>
-
-              {/* Animated fold indicators */}
-              <View style={styles.foldAnimation}>
-                <View style={[styles.paperShape, { borderColor: origami.color }]}>
-                  <Ionicons name={ICON_MAP[origami.icon_name] || 'diamond'} size={40} color={origami.color} />
-                </View>
-                {isPlaying && (
-                  <View style={styles.animDots}>
-                    <View style={[styles.animDot, { backgroundColor: origami.color, opacity: 0.3 + (elapsedTime % 3) * 0.2 }]} />
-                    <View style={[styles.animDot, { backgroundColor: origami.color, opacity: 0.5 + ((elapsedTime + 1) % 3) * 0.15 }]} />
-                    <View style={[styles.animDot, { backgroundColor: origami.color, opacity: 0.3 + ((elapsedTime + 2) % 3) * 0.2 }]} />
-                  </View>
-                )}
-              </View>
-            </Animated.View>
-          </View>
-
-          {/* Instruction overlay */}
-          <Animated.View style={[styles.instructionOverlay, { opacity: fadeAnim }]}>
-            <Text style={styles.instructionText} numberOfLines={3}>{step?.instruction}</Text>
-            {step?.tip && (
-              <View style={styles.tipRow}>
-                <Ionicons name="bulb" size={14} color="#EAB308" />
-                <Text style={styles.tipText}>{step.tip}</Text>
-              </View>
-            )}
-          </Animated.View>
+        {/* AI Instructor badge */}
+        <View style={styles.aiBadge}>
+          <Ionicons name="sparkles" size={14} color={Colors.white} />
+          <Text style={styles.aiBadgeText}>{hasRealVideo ? 'AI Video' : 'AI Instructor'}</Text>
         </View>
 
-        {/* Play/Pause overlay */}
-        <TouchableOpacity
-          testID="video-play-btn"
-          style={styles.playOverlay}
-          onPress={togglePlay}
-          activeOpacity={0.8}
-        >
-          {!isPlaying && (
+        {/* Play overlay (only when paused) */}
+        {!isPlaying && (
+          <TouchableOpacity testID="video-play-btn" style={styles.playOverlay} onPress={togglePlay} activeOpacity={0.8}>
             <View style={styles.playCircle}>
-              <Ionicons name={isFinished ? 'refresh' : 'play'} size={36} color={Colors.white} />
+              <Ionicons name="play" size={36} color={Colors.white} />
             </View>
-          )}
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+
+        {/* Tap to pause when playing */}
+        {isPlaying && (
+          <TouchableOpacity style={styles.playOverlay} onPress={togglePlay} activeOpacity={1} />
+        )}
+      </View>
+
+      {/* Instruction overlay */}
+      <View style={styles.instructionBar}>
+        <Text style={styles.stepLabel}>Step {currentStep + 1}: {step?.title}</Text>
+        <Text style={styles.instructionText} numberOfLines={2}>{step?.instruction}</Text>
       </View>
 
       {/* Progress bar */}
@@ -185,33 +186,21 @@ export default function VideoPlayerScreen() {
           <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: origami.color }]} />
         </View>
         <View style={styles.timeRow}>
-          <Text style={styles.timeText}>{formatTime(elapsedTime)}</Text>
-          <Text style={styles.timeText}>{formatTime(totalDuration)}</Text>
+          <Text style={styles.timeText}>{formatTime(videoPosition)}</Text>
+          <Text style={styles.timeText}>{formatTime(videoDuration)}</Text>
         </View>
       </View>
 
       {/* Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity
-          testID="video-prev-btn"
-          style={styles.controlBtn}
-          onPress={() => currentStep > 0 && seekToStep(currentStep - 1)}
-          disabled={currentStep === 0}
-        >
-          <Ionicons name="play-skip-back" size={24} color={currentStep === 0 ? Colors.textLight : Colors.white} />
+        <TouchableOpacity testID="video-prev-btn" style={styles.controlBtn} onPress={() => currentStep > 0 && seekToStep(currentStep - 1)} disabled={currentStep === 0}>
+          <Ionicons name="play-skip-back" size={24} color={currentStep === 0 ? '#475569' : Colors.white} />
         </TouchableOpacity>
-
         <TouchableOpacity testID="video-toggle-btn" style={[styles.mainPlayBtn, { backgroundColor: origami.color }]} onPress={togglePlay}>
-          <Ionicons name={isPlaying ? 'pause' : (isFinished ? 'refresh' : 'play')} size={32} color={Colors.white} />
+          <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color={Colors.white} />
         </TouchableOpacity>
-
-        <TouchableOpacity
-          testID="video-next-btn"
-          style={styles.controlBtn}
-          onPress={() => currentStep < steps.length - 1 && seekToStep(currentStep + 1)}
-          disabled={currentStep >= steps.length - 1}
-        >
-          <Ionicons name="play-skip-forward" size={24} color={currentStep >= steps.length - 1 ? Colors.textLight : Colors.white} />
+        <TouchableOpacity testID="video-next-btn" style={styles.controlBtn} onPress={() => currentStep < steps.length - 1 && seekToStep(currentStep + 1)} disabled={currentStep >= steps.length - 1}>
+          <Ionicons name="play-skip-forward" size={24} color={currentStep >= steps.length - 1 ? '#475569' : Colors.white} />
         </TouchableOpacity>
       </View>
 
@@ -233,9 +222,7 @@ export default function VideoPlayerScreen() {
                 <Text style={[styles.stepDotText, (i === currentStep || i < currentStep) && { color: Colors.white }]}>{i + 1}</Text>
               )}
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.stepRowTitle, i === currentStep && { color: origami.color, fontWeight: '800' }]}>{s.title}</Text>
-            </View>
+            <Text style={[styles.stepRowTitle, i === currentStep && { color: origami.color, fontWeight: '800' }]}>{s.title}</Text>
             {i === currentStep && isPlaying && (
               <View style={styles.nowPlaying}>
                 <View style={[styles.eqBar, { height: 8, backgroundColor: origami.color }]} />
@@ -253,85 +240,43 @@ export default function VideoPlayerScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F172A' },
   center: { alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: Colors.white, fontSize: 16, fontWeight: '600' },
-  topBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 10,
-  },
+  loadingText: { color: Colors.white, fontSize: 16, fontWeight: '600', marginTop: 12 },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
   closeBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   topTitle: { fontSize: 18, fontWeight: '800', color: Colors.white, flex: 1, textAlign: 'center' },
-  videoArea: { position: 'relative', marginHorizontal: 16 },
-  videoDisplay: {
-    borderRadius: 20, overflow: 'hidden', aspectRatio: 16 / 9,
-    maxHeight: 300,
-    justifyContent: 'center', alignItems: 'center',
-  },
+  videoArea: { position: 'relative', marginHorizontal: 16, borderRadius: 16, overflow: 'hidden', backgroundColor: '#1E293B' },
+  videoPlayer: { width: '100%', aspectRatio: 16 / 9, maxHeight: 300 },
+  videoFallback: { width: '100%', aspectRatio: 16 / 9, maxHeight: 300, justifyContent: 'center', alignItems: 'center', gap: 8 },
+  bigStepCircle: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', borderWidth: 3 },
+  bigStepNum: { fontSize: 22, fontWeight: '900' },
+  fallbackTitle: { fontSize: 16, fontWeight: '800' },
   aiBadge: {
-    position: 'absolute', top: 12, left: 12, zIndex: 10,
+    position: 'absolute', top: 10, left: 10,
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 4,
   },
   aiBadgeText: { color: Colors.white, fontSize: 12, fontWeight: '700' },
-  visualArea: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 10 },
-  stepVisual: { alignItems: 'center' },
-  bigStepCircle: {
-    width: 60, height: 60, borderRadius: 30,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 3, marginBottom: 8,
-  },
-  bigStepNum: { fontSize: 26, fontWeight: '900' },
-  visualStepTitle: { fontSize: 18, fontWeight: '800', textAlign: 'center' },
-  foldAnimation: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
-  paperShape: {
-    width: 60, height: 60, borderRadius: 12,
-    borderWidth: 2, borderStyle: 'dashed',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  animDots: { flexDirection: 'column', gap: 4 },
-  animDot: { width: 8, height: 8, borderRadius: 4 },
-  instructionOverlay: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)', padding: 14,
-  },
-  instructionText: { color: Colors.white, fontSize: 14, fontWeight: '600', lineHeight: 20 },
-  tipRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  tipText: { color: '#FDE047', fontSize: 12, fontWeight: '600', flex: 1 },
-  playOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center', alignItems: 'center', borderRadius: 20,
-  },
-  playCircle: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
-  },
-  progressSection: { paddingHorizontal: 20, paddingTop: 12 },
+  playOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
+  playCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  instructionBar: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#1E293B', marginHorizontal: 16, borderBottomLeftRadius: 12, borderBottomRightRadius: 12 },
+  stepLabel: { color: Colors.primary, fontSize: 13, fontWeight: '800' },
+  instructionText: { color: '#CBD5E1', fontSize: 14, fontWeight: '600', marginTop: 4, lineHeight: 20 },
+  progressSection: { paddingHorizontal: 20, paddingTop: 10 },
   progressBar: { height: 4, backgroundColor: '#334155', borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 2 },
   timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   timeText: { color: '#94A3B8', fontSize: 12, fontWeight: '600' },
-  controls: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 24, paddingVertical: 14,
-  },
+  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24, paddingVertical: 10 },
   controlBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  mainPlayBtn: {
-    width: 64, height: 64, borderRadius: 32,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  mainPlayBtn: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
   stepList: { flex: 1, paddingHorizontal: 16 },
   stepListContent: { paddingBottom: 20 },
-  stepListTitle: { color: '#94A3B8', fontSize: 14, fontWeight: '700', marginBottom: 10 },
-  stepRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12,
-    borderWidth: 1, borderColor: 'transparent', marginBottom: 4,
-  },
-  stepDot: {
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center',
-  },
+  stepListTitle: { color: '#94A3B8', fontSize: 14, fontWeight: '700', marginBottom: 8 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1, borderColor: 'transparent', marginBottom: 3 },
+  stepDot: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center' },
   stepDotText: { color: '#94A3B8', fontSize: 12, fontWeight: '800' },
-  stepRowTitle: { color: '#CBD5E1', fontSize: 14, fontWeight: '600' },
+  stepRowTitle: { color: '#CBD5E1', fontSize: 14, fontWeight: '600', flex: 1 },
   nowPlaying: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
   eqBar: { width: 3, borderRadius: 1 },
 });
