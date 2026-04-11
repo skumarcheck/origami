@@ -445,11 +445,12 @@ def _generate_step_video_sync(origami_title, origami_id, step_num, instruction):
     from emergentintegrations.llm.openai.video_generation import OpenAIVideoGeneration
     video_gen = OpenAIVideoGeneration(api_key=os.environ['EMERGENT_LLM_KEY'])
     prompt = (
-        f"Close-up of a woman's hands on a clean white desk, silently demonstrating origami. "
+        f"A friendly young woman sitting at a clean white desk, silently demonstrating origami. "
+        f"She is visible from the waist up, smiling warmly but not talking. "
         f"She is {instruction.lower()} "
-        f"No talking, no dialogue, completely silent demonstration. "
-        f"Colorful origami paper, bright natural lighting, professional craft tutorial. "
-        f"Smooth deliberate hand movements, kid-friendly style."
+        f"No talking, no dialogue, her lips are closed. Only her hands and body move. "
+        f"Colorful origami paper on the desk. Bright natural lighting, warm cozy room. "
+        f"Professional kid-friendly craft tutorial style."
     )
     if len(prompt) > 900:
         prompt = prompt[:900]

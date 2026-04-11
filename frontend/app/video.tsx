@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,146 +16,53 @@ const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   flame: 'flame', moon: 'moon', snow: 'snow',
 };
 
-export default function VideoPlayerScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const [origami, setOrigami] = useState<any>(null);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+function StepVideoPlayer({ videoUrl, audioUrl, origami, currentStep, steps, isPlaying, onTogglePlay, onStepChange }: any) {
+  const step = steps[currentStep] || steps[0];
 
-  useEffect(() => { loadOrigami(); }, []);
-
-  async function loadOrigami() {
-    try {
-      const data = await apiCall(`/origami/${id}`);
-      setOrigami(data);
-    } catch (e) { console.error(e); }
-  }
-
-  // Get video/audio URLs for current step
-  const stepVideos = origami?.step_videos || [];
-  const stepAudios = origami?.step_audio || [];
-  const hasPerStepMedia = stepVideos.length > 0;
-
-  // Determine current media URLs
-  const videoUrl = hasPerStepMedia && stepVideos[currentStep]
-    ? `${BASE_URL}/api/videos/${stepVideos[currentStep]}`
-    : origami?.video_file
-      ? `${BASE_URL}/api/videos/${origami.video_file}`
-      : null;
-
-  const audioUrl = hasPerStepMedia && stepAudios[currentStep]
-    ? `${BASE_URL}/api/audio/${stepAudios[currentStep]}`
-    : origami?.audio_file
-      ? `${BASE_URL}/api/audio/${origami.audio_file}`
-      : null;
-
-  // Video player
-  const videoPlayer = useVideoPlayer(videoUrl || '', (player) => {
+  // Video player - muted so only TTS narration is heard
+  const videoPlayer = useVideoPlayer(videoUrl, (player) => {
     player.loop = false;
-    player.muted = true; // Mute video - only TTS audio should play
+    player.muted = true;
   });
 
-  // Audio player
-  const audioPlayer = useAudioPlayer(audioUrl || '');
+  // Audio player - TTS narration voice
+  const audioPlayer = useAudioPlayer(audioUrl);
 
-  function handlePlay() {
-    if (videoPlayer) videoPlayer.play();
-    if (audioPlayer) audioPlayer.play();
-    setIsPlaying(true);
-  }
-
-  function handlePause() {
-    if (videoPlayer) videoPlayer.pause();
-    if (audioPlayer) audioPlayer.pause();
-    setIsPlaying(false);
-  }
-
-  function togglePlay() {
-    if (isPlaying) {
-      handlePause();
-    } else {
-      handlePlay();
-    }
-  }
-
-  function goToStep(stepIndex: number) {
-    handlePause();
-    setCurrentStep(stepIndex);
-    setIsPlaying(false);
-  }
-
-  // Auto-play when step changes (after a brief delay for media to load)
   useEffect(() => {
-    if (origami && hasPerStepMedia) {
-      const url = stepVideos[currentStep]
-        ? `${BASE_URL}/api/videos/${stepVideos[currentStep]}`
-        : null;
-      if (url && videoPlayer) {
-        videoPlayer.replace(url);
-        videoPlayer.muted = true;
-      }
-      const aUrl = stepAudios[currentStep]
-        ? `${BASE_URL}/api/audio/${stepAudios[currentStep]}`
-        : null;
-      if (aUrl && audioPlayer) {
-        audioPlayer.replace(aUrl);
-      }
+    if (videoUrl) videoPlayer.replace(videoUrl);
+  }, [videoUrl]);
+
+  useEffect(() => {
+    if (audioUrl) audioPlayer.replace(audioUrl);
+  }, [audioUrl]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      videoPlayer.play();
+      audioPlayer.play();
+    } else {
+      videoPlayer.pause();
+      audioPlayer.pause();
     }
-  }, [currentStep, origami]);
-
-  if (!origami) {
-    return (
-      <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading tutorial...</Text>
-      </View>
-    );
-  }
-
-  const steps = origami.steps || [];
-  const step = steps[currentStep] || steps[0];
-  const hasVideo = !!videoUrl;
+  }, [isPlaying]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity testID="video-close-btn" style={styles.closeBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.topTitle} numberOfLines={1}>{origami.title}</Text>
-        <View style={{ width: 44 }} />
-      </View>
-
+    <View style={styles.playerContainer}>
       {/* Video area */}
       <View style={styles.videoArea}>
-        {hasVideo ? (
-          <VideoView
-            player={videoPlayer}
-            style={styles.videoPlayer}
-            contentFit="contain"
-            nativeControls={false}
-          />
-        ) : (
-          <View style={[styles.videoFallback, { backgroundColor: origami.color + '15' }]}>
-            <View style={[styles.bigStepCircle, { backgroundColor: origami.color + '30', borderColor: origami.color }]}>
-              <Text style={[styles.bigStepNum, { color: origami.color }]}>{currentStep + 1}</Text>
-            </View>
-            <Text style={[styles.fallbackTitle, { color: origami.color }]}>{step?.title}</Text>
-            <Ionicons name={ICON_MAP[origami.icon_name] || 'diamond'} size={40} color={origami.color} />
-          </View>
-        )}
-
-        {/* AI Video badge */}
+        <VideoView
+          player={videoPlayer}
+          style={styles.videoPlayer}
+          contentFit="contain"
+          nativeControls={false}
+        />
+        {/* Badge */}
         <View style={styles.aiBadge}>
           <Ionicons name="sparkles" size={14} color={Colors.white} />
-          <Text style={styles.aiBadgeText}>{hasPerStepMedia ? `Step ${currentStep + 1}/${steps.length}` : 'AI Video'}</Text>
+          <Text style={styles.aiBadgeText}>Step {currentStep + 1}/{steps.length}</Text>
         </View>
-
-        {/* Play/pause overlay */}
-        <TouchableOpacity testID="video-play-btn" style={styles.playOverlay} onPress={togglePlay} activeOpacity={0.9}>
+        {/* Play overlay */}
+        <TouchableOpacity testID="video-play-btn" style={styles.playOverlay} onPress={onTogglePlay} activeOpacity={0.9}>
           {!isPlaying && (
             <View style={styles.playCircle}>
               <Ionicons name="play" size={36} color={Colors.white} />
@@ -164,7 +71,7 @@ export default function VideoPlayerScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Step instruction */}
+      {/* Instruction */}
       <View style={styles.instructionBar}>
         <Text style={styles.stepLabel}>Step {currentStep + 1}: {step?.title}</Text>
         <Text style={styles.instructionText} numberOfLines={3}>{step?.instruction}</Text>
@@ -178,28 +85,135 @@ export default function VideoPlayerScreen() {
 
       {/* Controls */}
       <View style={styles.controls}>
-        <TouchableOpacity
-          testID="video-prev-btn"
-          style={styles.controlBtn}
-          onPress={() => currentStep > 0 && goToStep(currentStep - 1)}
-          disabled={currentStep === 0}
-        >
+        <TouchableOpacity testID="video-prev-btn" style={styles.controlBtn} onPress={() => currentStep > 0 && onStepChange(currentStep - 1)} disabled={currentStep === 0}>
           <Ionicons name="play-skip-back" size={24} color={currentStep === 0 ? '#475569' : Colors.white} />
         </TouchableOpacity>
-
-        <TouchableOpacity testID="video-toggle-btn" style={[styles.mainPlayBtn, { backgroundColor: origami.color }]} onPress={togglePlay}>
+        <TouchableOpacity testID="video-toggle-btn" style={[styles.mainPlayBtn, { backgroundColor: origami.color }]} onPress={onTogglePlay}>
           <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color={Colors.white} />
         </TouchableOpacity>
-
-        <TouchableOpacity
-          testID="video-next-btn"
-          style={styles.controlBtn}
-          onPress={() => currentStep < steps.length - 1 && goToStep(currentStep + 1)}
-          disabled={currentStep >= steps.length - 1}
-        >
+        <TouchableOpacity testID="video-next-btn" style={styles.controlBtn} onPress={() => currentStep < steps.length - 1 && onStepChange(currentStep + 1)} disabled={currentStep >= steps.length - 1}>
           <Ionicons name="play-skip-forward" size={24} color={currentStep >= steps.length - 1 ? '#475569' : Colors.white} />
         </TouchableOpacity>
       </View>
+    </View>
+  );
+}
+
+function FallbackPlayer({ origami, currentStep, steps, isPlaying, onTogglePlay, onStepChange }: any) {
+  const step = steps[currentStep] || steps[0];
+  return (
+    <View style={styles.playerContainer}>
+      <View style={styles.videoArea}>
+        <View style={[styles.videoFallback, { backgroundColor: origami.color + '15' }]}>
+          <View style={[styles.bigStepCircle, { backgroundColor: origami.color + '30', borderColor: origami.color }]}>
+            <Text style={[styles.bigStepNum, { color: origami.color }]}>{currentStep + 1}</Text>
+          </View>
+          <Text style={[styles.fallbackTitle, { color: origami.color }]}>{step?.title}</Text>
+          <Ionicons name={ICON_MAP[origami.icon_name] || 'diamond'} size={40} color={origami.color} />
+        </View>
+        <View style={styles.aiBadge}>
+          <Ionicons name="sparkles" size={14} color={Colors.white} />
+          <Text style={styles.aiBadgeText}>AI Instructor</Text>
+        </View>
+      </View>
+      <View style={styles.instructionBar}>
+        <Text style={styles.stepLabel}>Step {currentStep + 1}: {step?.title}</Text>
+        <Text style={styles.instructionText} numberOfLines={3}>{step?.instruction}</Text>
+      </View>
+      <View style={styles.controls}>
+        <TouchableOpacity style={styles.controlBtn} onPress={() => currentStep > 0 && onStepChange(currentStep - 1)} disabled={currentStep === 0}>
+          <Ionicons name="play-skip-back" size={24} color={currentStep === 0 ? '#475569' : Colors.white} />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.mainPlayBtn, { backgroundColor: origami.color }]} onPress={onTogglePlay}>
+          <Ionicons name={isPlaying ? 'pause' : 'play'} size={32} color={Colors.white} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlBtn} onPress={() => currentStep < steps.length - 1 && onStepChange(currentStep + 1)} disabled={currentStep >= steps.length - 1}>
+          <Ionicons name="play-skip-forward" size={24} color={currentStep >= steps.length - 1 ? '#475569' : Colors.white} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+export default function VideoPlayerScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [origami, setOrigami] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    apiCall(`/origami/${id}`).then(setOrigami).catch(console.error);
+  }, []);
+
+  if (!origami) {
+    return (
+      <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Loading tutorial...</Text>
+      </View>
+    );
+  }
+
+  const steps = origami.steps || [];
+  const stepVideos = origami.step_videos || [];
+  const stepAudios = origami.step_audio || [];
+  const hasPerStep = stepVideos.length > 0;
+
+  // Determine video/audio URLs
+  let videoUrl = '';
+  let audioUrl = '';
+  if (hasPerStep && stepVideos[currentStep]) {
+    videoUrl = `${BASE_URL}/api/videos/${stepVideos[currentStep]}`;
+    audioUrl = stepAudios[currentStep] ? `${BASE_URL}/api/audio/${stepAudios[currentStep]}` : '';
+  } else if (origami.video_file) {
+    videoUrl = `${BASE_URL}/api/videos/${origami.video_file}`;
+    audioUrl = origami.audio_file ? `${BASE_URL}/api/audio/${origami.audio_file}` : '';
+  }
+
+  const hasVideo = !!videoUrl;
+
+  function handleStepChange(step: number) {
+    setIsPlaying(false);
+    setCurrentStep(step);
+  }
+
+  function togglePlay() {
+    setIsPlaying(!isPlaying);
+  }
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.topBar}>
+        <TouchableOpacity testID="video-close-btn" style={styles.closeBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+        </TouchableOpacity>
+        <Text style={styles.topTitle} numberOfLines={1}>{origami.title}</Text>
+        <View style={{ width: 44 }} />
+      </View>
+
+      {hasVideo ? (
+        <StepVideoPlayer
+          videoUrl={videoUrl}
+          audioUrl={audioUrl}
+          origami={origami}
+          currentStep={currentStep}
+          steps={steps}
+          isPlaying={isPlaying}
+          onTogglePlay={togglePlay}
+          onStepChange={handleStepChange}
+        />
+      ) : (
+        <FallbackPlayer
+          origami={origami}
+          currentStep={currentStep}
+          steps={steps}
+          isPlaying={isPlaying}
+          onTogglePlay={togglePlay}
+          onStepChange={handleStepChange}
+        />
+      )}
 
       {/* Step list */}
       <ScrollView style={styles.stepList} contentContainerStyle={styles.stepListContent}>
@@ -209,7 +223,7 @@ export default function VideoPlayerScreen() {
             key={i}
             testID={`video-step-${i}`}
             style={[styles.stepRow, i === currentStep && { backgroundColor: origami.color + '15', borderColor: origami.color + '40' }]}
-            onPress={() => goToStep(i)}
+            onPress={() => handleStepChange(i)}
             activeOpacity={0.7}
           >
             <View style={[styles.stepDot, i === currentStep && { backgroundColor: origami.color }, i < currentStep && { backgroundColor: Colors.success }]}>
@@ -241,6 +255,7 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
   closeBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   topTitle: { fontSize: 18, fontWeight: '800', color: Colors.white, flex: 1, textAlign: 'center' },
+  playerContainer: {},
   videoArea: { position: 'relative', marginHorizontal: 16, borderRadius: 16, overflow: 'hidden', backgroundColor: '#1E293B' },
   videoPlayer: { width: '100%', aspectRatio: 16 / 9, maxHeight: 300 },
   videoFallback: { width: '100%', aspectRatio: 16 / 9, maxHeight: 300, justifyContent: 'center', alignItems: 'center', gap: 8 },
