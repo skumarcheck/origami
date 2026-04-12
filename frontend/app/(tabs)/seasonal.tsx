@@ -100,22 +100,40 @@ export default function SeasonalScreen() {
       )}
 
       <Text style={styles.sectionTitle}>Seasons</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seasonsRow}>
-        {Object.entries(SEASON_DATA).map(([key, val]) => (
-          <TouchableOpacity
-            key={key}
-            testID={`season-${key}-btn`}
-            style={[styles.seasonChip, selectedSeason === key && { backgroundColor: val.color, borderColor: val.color }]}
-            onPress={() => setSelectedSeason(key)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name={val.icon} size={18} color={selectedSeason === key ? Colors.white : val.color} />
-            <Text style={[styles.seasonChipText, selectedSeason === key && { color: Colors.white }]}>
-              {key.charAt(0).toUpperCase() + key.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={styles.seasonsGrid}>
+        <View style={styles.seasonsRow}>
+          {Object.entries(SEASON_DATA).slice(0, 2).map(([key, val]) => (
+            <TouchableOpacity
+              key={key}
+              testID={`season-${key}-btn`}
+              style={[styles.seasonChip, selectedSeason === key && { backgroundColor: val.color, borderColor: val.color }]}
+              onPress={() => setSelectedSeason(key)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={val.icon} size={18} color={selectedSeason === key ? Colors.white : val.color} />
+              <Text style={[styles.seasonChipText, selectedSeason === key && { color: Colors.white }]}>
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.seasonsRow}>
+          {Object.entries(SEASON_DATA).slice(2, 4).map(([key, val]) => (
+            <TouchableOpacity
+              key={key}
+              testID={`season-${key}-btn`}
+              style={[styles.seasonChip, selectedSeason === key && { backgroundColor: val.color, borderColor: val.color }]}
+              onPress={() => setSelectedSeason(key)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={val.icon} size={18} color={selectedSeason === key ? Colors.white : val.color} />
+              <Text style={[styles.seasonChipText, selectedSeason === key && { color: Colors.white }]}>
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
 
       {seasonalItems.length > 0 && (
         <View style={styles.itemsGrid}>
@@ -178,13 +196,14 @@ const styles = StyleSheet.create({
   currentLabel: { fontSize: 12, fontWeight: '700', color: Colors.textMuted },
   currentSeason: { fontSize: 24, fontWeight: '900', marginTop: 2 },
   sectionTitle: { fontSize: 20, fontWeight: '800', color: Colors.textMain, marginBottom: 14 },
-  seasonsRow: { gap: 10, paddingBottom: 4, marginBottom: 16 },
+  seasonsGrid: { marginBottom: 16, gap: 8 },
+  seasonsRow: { flexDirection: 'row', gap: 8 },
   seasonChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 18, paddingVertical: 12, borderRadius: 9999,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 12, borderRadius: 9999,
     backgroundColor: Colors.white, borderWidth: 2, borderColor: Colors.border,
   },
-  seasonChipText: { fontSize: 14, fontWeight: '700', color: Colors.textMain },
+  seasonChipText: { fontSize: 13, fontWeight: '700', color: Colors.textMain },
   itemsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   itemCard: {
     width: '47%', backgroundColor: Colors.white, borderRadius: 18, padding: 16,
