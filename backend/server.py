@@ -6,7 +6,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
@@ -597,6 +597,17 @@ async def shutdown():
 
 # Include router and middleware
 app.include_router(api_router)
+
+# Serve hosted pages (privacy policy, about)
+@app.get("/api/page/privacy", response_class=HTMLResponse)
+async def privacy_page():
+    with open("/app/backend/pages/privacy.html") as f:
+        return f.read()
+
+@app.get("/api/page/about", response_class=HTMLResponse)
+async def about_page():
+    with open("/app/backend/pages/about.html") as f:
+        return f.read()
 
 # Serve static video and audio files
 os.makedirs("/app/backend/videos", exist_ok=True)
