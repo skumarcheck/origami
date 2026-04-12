@@ -88,10 +88,22 @@ export default function SubscriptionScreen() {
           <View style={styles.priceCard}>
             <Text style={styles.priceLabel}>Monthly</Text>
             <View style={styles.priceRow}>
-              <Text style={styles.priceAmount}>$4.99</Text>
+              <Text style={styles.priceAmount}>$2.99</Text>
               <Text style={styles.priceUnit}>/month</Text>
             </View>
             <Text style={styles.priceNote}>Cancel anytime. First month free!</Text>
+          </View>
+
+          <View style={[styles.priceCard, { borderColor: Colors.primary, borderWidth: 3, backgroundColor: '#E0F7FA' }]}>
+            <View style={{ position: 'absolute', top: -12, backgroundColor: Colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4 }}>
+              <Text style={{ color: Colors.white, fontSize: 12, fontWeight: '800' }}>BEST VALUE</Text>
+            </View>
+            <Text style={[styles.priceLabel, { marginTop: 8 }]}>Yearly</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceAmount}>$24.99</Text>
+              <Text style={styles.priceUnit}>/year</Text>
+            </View>
+            <Text style={styles.priceNote}>Save 30%! That's only $2.08/month</Text>
           </View>
 
           <Text style={styles.paymentTitle}>Pay with</Text>
