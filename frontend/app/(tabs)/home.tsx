@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, AppState } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
@@ -40,12 +40,23 @@ export default function HomeScreen() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Reload stats every time screen comes into focus (e.g. after completing origami)
-  useFocusEffect(
-    useCallback(() => {
+  // Auto-refresh stats when app comes back to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        apiCall('/progress/stats').then(setStats).catch(console.error);
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Also refresh stats on a short interval so navigating back shows updated XP
+  useEffect(() => {
+    const interval = setInterval(() => {
       apiCall('/progress/stats').then(setStats).catch(console.error);
-    }, [])
-  );
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const onRefresh = () => { setRefreshing(true); loadData(); };
 
