@@ -447,12 +447,11 @@ def _generate_step_video_sync(origami_title, origami_id, step_num, instruction):
     # Craft a precise visual description from the instruction
     action = instruction.lower().rstrip('.')
     prompt = (
-        f"A friendly young woman sitting at a clean white desk, visible from waist up. "
-        f"She is silently and carefully {action}. "
-        f"Her hands move slowly and deliberately, showing each fold clearly. "
-        f"Colorful origami paper on the desk. She does not talk, her lips stay closed. "
-        f"Bright natural lighting, warm cozy room, professional origami tutorial. "
-        f"Camera angle shows both her face and her hands working on the paper."
+        f"A kind smiling woman sitting at a bright colorful desk, slowly and carefully "
+        f"folding a piece of colorful paper. She is doing the following: {action}. "
+        f"Her hands move very slowly showing every fold clearly to the camera. "
+        f"She does not speak or open her mouth. The room is bright and cheerful. "
+        f"Smooth steady camera, no shaking. Simple calm paper folding tutorial."
     )
     if len(prompt) > 900:
         prompt = prompt[:900]

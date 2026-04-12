@@ -1,94 +1,94 @@
 """Seed data generator for 200+ origami projects."""
 import random
 
-# Step templates by category and skill
+# Step templates by category and skill - ALL KID-FRIENDLY LANGUAGE
 def _animal_steps(title, skill):
     if skill == "beginner":
         return [
-            {"step_number": 1, "title": "Prepare Your Paper", "instruction": f"Take a square piece of colored paper for your {title}. Place it on a flat surface with one corner pointing toward you like a diamond.", "tip": "Pick a color that matches your animal!"},
-            {"step_number": 2, "title": "First Fold", "instruction": "Fold the paper in half diagonally to create a triangle. Press the crease firmly with your finger.", "tip": None},
-            {"step_number": 3, "title": "Shape the Body", "instruction": f"Fold the triangle to create the basic body shape of your {title}. Position the long side at the top.", "tip": "Keep your folds neat and even!"},
-            {"step_number": 4, "title": "Create Features", "instruction": f"Make small folds to form the ears, nose, or other features that make your {title} recognizable.", "tip": None},
-            {"step_number": 5, "title": "Finishing Touches", "instruction": f"Draw eyes, a nose, and a mouth with markers to bring your {title} to life! Add any extra details you like.", "tip": f"Give your {title} a name!"},
+            {"step_number": 1, "title": "Get Your Paper Ready", "instruction": f"Grab a square piece of colored paper for your {title}. Put it flat on the table like a diamond shape.", "tip": "Pick a fun color that matches your animal!"},
+            {"step_number": 2, "title": "Fold in Half", "instruction": "Fold one corner all the way over to the opposite corner to make a triangle. Press down hard on the fold line.", "tip": None},
+            {"step_number": 3, "title": "Make the Body", "instruction": f"Fold the triangle to make it look like the body of your {title}. Keep the long flat side at the top.", "tip": "Nice and neat folds make it look the best!"},
+            {"step_number": 4, "title": "Add the Fun Parts", "instruction": f"Make little folds to create the ears, nose, or other parts that make your {title} look real.", "tip": None},
+            {"step_number": 5, "title": "Decorate It!", "instruction": f"Use markers to draw eyes, a nose, and a mouth on your {title}. Add anything else you want!", "tip": f"Give your {title} a name!"},
         ]
     elif skill == "intermediate":
         return [
-            {"step_number": 1, "title": "Create the Base", "instruction": f"Start with a square piece of paper for your {title}. Fold in half diagonally both ways, then horizontally both ways. Unfold to see a star pattern of creases.", "tip": "Use firm, crisp creases for the best results!"},
-            {"step_number": 2, "title": "Collapse into Base", "instruction": "Using the creases, collapse the paper into a preliminary base (a smaller square shape). This is the foundation for your model.", "tip": None},
-            {"step_number": 3, "title": "Shape the Body", "instruction": f"Fold the front edges to the center line on both sides, creating a kite shape. This forms the body of your {title}.", "tip": None},
-            {"step_number": 4, "title": "Form the Head", "instruction": f"Use a reverse fold to bring one point upward for the neck, then another reverse fold at the tip to create the head of your {title}.", "tip": "The angle of the fold determines the pose!"},
-            {"step_number": 5, "title": "Add Details", "instruction": f"Fold and shape the legs, wings, or tail. Make small crimp folds to add realistic details to your {title}.", "tip": None},
-            {"step_number": 6, "title": "Final Shaping", "instruction": f"Gently curve and shape your {title} into its final 3D form. Adjust the head angle and body proportions until you're happy.", "tip": f"Display your {title} on a shelf!"},
+            {"step_number": 1, "title": "Make Fold Lines", "instruction": f"Start with a square paper for your {title}. Fold it corner to corner both ways, then side to side both ways. Open it back up - you'll see a star shape of fold lines.", "tip": "Press hard on every fold to make sharp lines!"},
+            {"step_number": 2, "title": "Squish It Down", "instruction": "Use those fold lines to push the paper into a smaller square shape. Push the sides in and flatten it down.", "tip": None},
+            {"step_number": 3, "title": "Shape the Body", "instruction": f"Fold the side edges in to the middle line on both sides. This makes a pointy shape that will be the body of your {title}.", "tip": None},
+            {"step_number": 4, "title": "Make the Head", "instruction": f"Push one pointy end up to make the neck, then bend the very tip down to make the head of your {title}.", "tip": "The way you bend it changes how your animal looks!"},
+            {"step_number": 5, "title": "Add Legs and Tail", "instruction": f"Fold and shape the extra points to make legs, wings, or a tail. Make little zigzag folds to add cool details to your {title}.", "tip": None},
+            {"step_number": 6, "title": "Make It 3D!", "instruction": f"Gently pull and bend your {title} so it looks round and real. Move the head and body until it looks just right.", "tip": f"Put your {title} on a shelf to show it off!"},
         ]
     else:
         return [
-            {"step_number": 1, "title": "Crease Pattern", "instruction": f"Start with a large square for your {title}. Create a detailed grid of mountain and valley folds - fold into quarters both ways and diagonally.", "tip": "Use thin, high-quality paper for advanced models!"},
-            {"step_number": 2, "title": "Create the Base", "instruction": "Collapse the paper into a bird base or waterbomb base depending on the design. This requires precise alignment of all creases.", "tip": None},
-            {"step_number": 3, "title": "Petal Folds", "instruction": "Perform petal folds on multiple sides to create the narrow points needed for limbs and features.", "tip": "This is the most challenging step - take your time!"},
-            {"step_number": 4, "title": "Shape the Body", "instruction": f"Narrow the body section and create the main form of your {title} using a combination of inside and outside reverse folds.", "tip": None},
-            {"step_number": 5, "title": "Create the Head", "instruction": f"Form the head with a series of precise reverse folds. Add detail folds for horns, ears, or beak of your {title}.", "tip": None},
-            {"step_number": 6, "title": "Limbs and Wings", "instruction": f"Shape the legs, wings, or arms using crimp folds and squash folds. Each limb should be symmetrical.", "tip": None},
-            {"step_number": 7, "title": "Detail Work", "instruction": f"Add intricate details - scales, feathers, claws, or texture folds that bring your {title} to life.", "tip": None},
-            {"step_number": 8, "title": "Final Sculpture", "instruction": f"Gently shape your {title} into a dramatic 3D pose. Curve wings, arch the neck, and position the tail for the best display.", "tip": "Try wet-folding for even smoother curves!"},
+            {"step_number": 1, "title": "Make a Fold Map", "instruction": f"Start with a big square paper for your {title}. Fold it into four parts both ways and corner to corner. These fold lines are your map!", "tip": "Use thin paper - it's easier for tricky folds!"},
+            {"step_number": 2, "title": "Squish into Shape", "instruction": "Push the paper together using your fold lines to make a small pointy base shape. Line everything up carefully.", "tip": None},
+            {"step_number": 3, "title": "Lift and Fold", "instruction": "Lift the bottom flap up and fold the sides in at the same time. Do this on all sides to make long skinny points.", "tip": "This is the hardest part - go slow and be patient!"},
+            {"step_number": 4, "title": "Shape the Body", "instruction": f"Make the body part skinnier by folding the edges in. Then push-fold to shape the main body of your {title}.", "tip": None},
+            {"step_number": 5, "title": "Make the Head", "instruction": f"Bend one point up for the neck, then bend the tip to make the head. Add little folds for horns, ears, or a beak on your {title}.", "tip": None},
+            {"step_number": 6, "title": "Arms and Wings", "instruction": f"Shape the legs, wings, or arms by making zigzag folds. Make both sides look the same.", "tip": None},
+            {"step_number": 7, "title": "Add Cool Details", "instruction": f"Add tiny folds for things like scales, feathers, or claws to make your {title} look amazing.", "tip": None},
+            {"step_number": 8, "title": "Strike a Pose!", "instruction": f"Gently bend your {title} into a cool 3D pose. Curve the wings, bend the neck, and shape the tail. You did it!", "tip": "Try wetting the paper a little for smoother curves!"},
         ]
 
 def _flower_steps(title, skill):
     if skill == "beginner":
         return [
-            {"step_number": 1, "title": "Start with Color", "instruction": f"Take a square piece of paper in a beautiful color for your {title}. Place it like a diamond on your table.", "tip": "Bright colors work best for flowers!"},
-            {"step_number": 2, "title": "Triangle Fold", "instruction": "Fold the paper in half diagonally to make a triangle. Crease well.", "tip": None},
-            {"step_number": 3, "title": "Create Petals", "instruction": f"Fold the corners of the triangle upward to start forming the petals of your {title}.", "tip": "Make the petals even on both sides."},
-            {"step_number": 4, "title": "Shape the Bloom", "instruction": f"Fold the edges to round out the shape of your {title}. Tuck any sharp corners behind.", "tip": None},
-            {"step_number": 5, "title": "Add a Stem", "instruction": f"Roll a thin strip of green paper for the stem. Attach it to the back of your {title} with tape or glue.", "tip": "Make a whole bouquet in different colors!"},
+            {"step_number": 1, "title": "Pick a Pretty Color", "instruction": f"Grab a square piece of paper in a pretty color for your {title}. Put it on the table like a diamond.", "tip": "Bright colors make the best flowers!"},
+            {"step_number": 2, "title": "Fold a Triangle", "instruction": "Fold one corner over to the other corner to make a triangle. Press the fold down nice and flat.", "tip": None},
+            {"step_number": 3, "title": "Make the Petals", "instruction": f"Fold the pointy corners of the triangle up to start making the petals of your {title}.", "tip": "Try to make both sides look the same."},
+            {"step_number": 4, "title": "Round It Out", "instruction": f"Fold the sharp edges behind to make your {title} look soft and round, like a real flower.", "tip": None},
+            {"step_number": 5, "title": "Add a Stem!", "instruction": f"Roll a thin piece of green paper to make a stem. Stick it on the back of your {title} with tape.", "tip": "Make a whole bunch of flowers in different colors!"},
         ]
     elif skill == "intermediate":
         return [
-            {"step_number": 1, "title": "Crease Pattern", "instruction": f"Start with a square piece of paper for your {title}. Fold in half both ways and diagonally both ways to create a star of creases.", "tip": "Use pretty patterned paper for extra beauty!"},
-            {"step_number": 2, "title": "Create the Base", "instruction": "Collapse into a preliminary base or waterbomb base, depending on the flower type.", "tip": None},
-            {"step_number": 3, "title": "Form Inner Petals", "instruction": f"Fold the top layers outward to create the first layer of petals for your {title}.", "tip": "Each petal should be the same size."},
-            {"step_number": 4, "title": "Outer Petals", "instruction": f"Fold additional layers to create the outer petals. Each layer should open slightly more than the last.", "tip": None},
-            {"step_number": 5, "title": "Shape the Center", "instruction": f"Create the center of your {title} by folding or twisting the innermost paper.", "tip": None},
-            {"step_number": 6, "title": "Final Bloom", "instruction": f"Gently curl each petal outward using a pencil. Shape your {title} into a natural-looking bloom.", "tip": "Use a pencil to curl petals naturally!"},
+            {"step_number": 1, "title": "Make Fold Lines", "instruction": f"Start with a square paper for your {title}. Fold it in half both ways and corner to corner both ways. Open it up to see all the fold lines.", "tip": "Use pretty paper for extra beauty!"},
+            {"step_number": 2, "title": "Squish into Shape", "instruction": "Push the paper together using the fold lines to make a small triangle or square base shape.", "tip": None},
+            {"step_number": 3, "title": "First Petals", "instruction": f"Fold the top parts outward to make the first layer of petals for your {title}.", "tip": "Make each petal the same size."},
+            {"step_number": 4, "title": "More Petals", "instruction": f"Fold more layers out to make the outer petals. Each layer should open up a bit more than the one before.", "tip": None},
+            {"step_number": 5, "title": "Make the Middle", "instruction": f"Fold or twist the very center paper to make the middle part of your {title}.", "tip": None},
+            {"step_number": 6, "title": "Make It Bloom!", "instruction": f"Use a pencil to gently curl each petal outward. Shape your {title} so it looks like it's blooming!", "tip": "Roll petals around a pencil for the best curl!"},
         ]
     else:
         return [
-            {"step_number": 1, "title": "Grid Preparation", "instruction": f"Start with a large square for your {title}. Create a precise grid of creases by folding into thirds or quarters both ways.", "tip": "Precision is key for advanced flowers!"},
-            {"step_number": 2, "title": "Blintz Fold Layers", "instruction": "Fold all four corners to the center. Repeat this blintz fold 2-3 times to create multiple layers.", "tip": None},
-            {"step_number": 3, "title": "Central Twist", "instruction": f"Create the center spiral or twist that forms the heart of your {title}. This requires careful manipulation.", "tip": "Go slowly - the paper can tear at this stage!"},
-            {"step_number": 4, "title": "First Petal Layer", "instruction": f"Carefully pull out and shape the first layer of petals from underneath. These form the inner petals of your {title}.", "tip": None},
-            {"step_number": 5, "title": "Additional Layers", "instruction": "Continue pulling out petal layers, each slightly larger and more open than the last.", "tip": None},
-            {"step_number": 6, "title": "Outer Petals", "instruction": f"Form the outermost petals. These should spread wide to give your {title} a full, blooming appearance.", "tip": None},
-            {"step_number": 7, "title": "Curl and Shape", "instruction": f"Use a pencil to curl each petal, giving your {title} a realistic, three-dimensional look.", "tip": None},
-            {"step_number": 8, "title": "Stem and Leaves", "instruction": f"Create a stem from green paper and add one or two leaves. Attach to complete your {title}.", "tip": "This makes a perfect gift that never wilts!"},
+            {"step_number": 1, "title": "Make Fold Lines", "instruction": f"Start with a big square paper for your {title}. Fold it into three or four parts both ways to make a grid of fold lines.", "tip": "Take your time - neat fold lines make a better flower!"},
+            {"step_number": 2, "title": "Fold Corners In", "instruction": "Fold all four corners to the middle. Then do it again! And one more time! Now you have lots of layers.", "tip": None},
+            {"step_number": 3, "title": "Twist the Middle", "instruction": f"Carefully twist the center of the paper to make a spiral. This will be the heart of your {title}.", "tip": "Go really slowly here - the paper can rip if you rush!"},
+            {"step_number": 4, "title": "Pull Out Petals", "instruction": f"Very gently, reach underneath and pull the paper flaps up and out to make the first ring of petals for your {title}.", "tip": None},
+            {"step_number": 5, "title": "More Petal Rings", "instruction": "Keep pulling out more layers of petals. Each ring should be a little bigger and more open.", "tip": None},
+            {"step_number": 6, "title": "Outside Petals", "instruction": f"Pull out the last ring of petals. Make them spread out wide so your {title} looks full and beautiful.", "tip": None},
+            {"step_number": 7, "title": "Curl the Petals", "instruction": f"Wrap each petal around a pencil and let go to make them curl. This makes your {title} look real!", "tip": None},
+            {"step_number": 8, "title": "Add Stem and Leaves", "instruction": f"Roll green paper into a thin stem and cut out some leaves. Tape them on to finish your {title}. Beautiful!", "tip": "This flower will never die - it makes a great gift!"},
         ]
 
 def _object_steps(title, skill):
     if skill == "beginner":
         return [
-            {"step_number": 1, "title": "Get Your Paper", "instruction": f"Take a piece of paper for your {title}. Use rectangular paper for some projects, square for others.", "tip": None},
-            {"step_number": 2, "title": "Main Fold", "instruction": f"Fold the paper in half to create the basic shape of your {title}. Crease firmly.", "tip": "A sharp crease makes a big difference!"},
-            {"step_number": 3, "title": "Shape It", "instruction": f"Make additional folds to shape your {title}. Follow the creases carefully.", "tip": None},
-            {"step_number": 4, "title": "Add Details", "instruction": f"Fold the smaller features that make your {title} recognizable. Tuck in loose edges.", "tip": None},
-            {"step_number": 5, "title": "Done!", "instruction": f"Your {title} is complete! Decorate it with markers or stickers if you want.", "tip": "Try making it with different colored paper!"},
+            {"step_number": 1, "title": "Grab Your Paper", "instruction": f"Get a piece of paper for your {title}. Some need rectangle paper, some need square - check which one!", "tip": None},
+            {"step_number": 2, "title": "Big Fold", "instruction": f"Fold the paper in half to start making your {title}. Press the fold line down hard.", "tip": "A good fold makes everything easier!"},
+            {"step_number": 3, "title": "Shape It Up", "instruction": f"Make more folds to shape your {title}. Follow the lines you already made.", "tip": None},
+            {"step_number": 4, "title": "Add the Details", "instruction": f"Fold the smaller parts that make your {title} look like the real thing. Tuck in any loose bits.", "tip": None},
+            {"step_number": 5, "title": "All Done!", "instruction": f"Your {title} is finished! Color it with markers or add stickers to make it extra cool.", "tip": "Try making it with different colored paper!"},
         ]
     elif skill == "intermediate":
         return [
-            {"step_number": 1, "title": "Prepare Paper", "instruction": f"Start with a square piece of paper for your {title}. Create center creases by folding in half both ways.", "tip": "Smooth, thin paper works best!"},
-            {"step_number": 2, "title": "Create Framework", "instruction": f"Make the foundational folds that will define the structure of your {title}.", "tip": None},
-            {"step_number": 3, "title": "Build the Form", "instruction": f"Through a series of folds, build up the three-dimensional shape of your {title}.", "tip": "Accuracy matters at this stage!"},
-            {"step_number": 4, "title": "Refine Shape", "instruction": f"Make precision folds to refine the details and proportions of your {title}.", "tip": None},
-            {"step_number": 5, "title": "Lock in Place", "instruction": f"Tuck flaps and secure folds to lock your {title} into its final form.", "tip": None},
-            {"step_number": 6, "title": "Final Adjustments", "instruction": f"Make final tweaks to shape and display your completed {title}.", "tip": "Try it with metallic or patterned paper!"},
+            {"step_number": 1, "title": "Get Paper Ready", "instruction": f"Start with a square paper for your {title}. Fold it in half both ways to find the middle, then open it back up.", "tip": "Smooth, thin paper works best!"},
+            {"step_number": 2, "title": "Build the Base", "instruction": f"Make the main folds that give your {title} its basic shape. These folds are the building blocks.", "tip": None},
+            {"step_number": 3, "title": "Make It 3D", "instruction": f"Keep folding to make your {title} pop up into a 3D shape. It should start looking like the real thing!", "tip": "Take your time here - it's the tricky part!"},
+            {"step_number": 4, "title": "Clean It Up", "instruction": f"Make careful folds to clean up the edges and shape of your {title}.", "tip": None},
+            {"step_number": 5, "title": "Lock It Together", "instruction": f"Tuck all the flaps in and fold the last pieces to hold your {title} together tight.", "tip": None},
+            {"step_number": 6, "title": "Final Touches", "instruction": f"Fix up anything that looks off and show off your finished {title}!", "tip": "Try making it with shiny or patterned paper!"},
         ]
     else:
         return [
-            {"step_number": 1, "title": "Complex Crease Pattern", "instruction": f"Create the full crease pattern for your {title} by making precise grid folds and diagonal creases.", "tip": "Use large paper (20cm+) for complex models!"},
-            {"step_number": 2, "title": "Collapse the Model", "instruction": "Collapse all creases simultaneously to form the base shape. This requires understanding 3D geometry.", "tip": None},
-            {"step_number": 3, "title": "Primary Structure", "instruction": f"Shape the main structural elements of your {title} using a combination of sink folds and petal folds.", "tip": None},
-            {"step_number": 4, "title": "Secondary Features", "instruction": f"Add the secondary features and details that give your {title} its distinctive look.", "tip": "Refer back to the crease pattern if you get lost."},
-            {"step_number": 5, "title": "Fine Detail", "instruction": f"Create intricate small folds for the fine details of your {title}.", "tip": None},
-            {"step_number": 6, "title": "Dimensional Shaping", "instruction": f"Carefully shape your {title} into three dimensions, adjusting curves and angles.", "tip": None},
-            {"step_number": 7, "title": "Final Sculpting", "instruction": f"Your {title} is complete! Make final adjustments to display it at its best.", "tip": "Consider wet-folding for smooth professional results!"},
+            {"step_number": 1, "title": "Map Out the Folds", "instruction": f"Make all the fold lines you'll need for your {title}. Fold the paper into a grid and corner to corner.", "tip": "Use big paper (bigger than your hand) for tricky models!"},
+            {"step_number": 2, "title": "Push It Together", "instruction": "Use all those fold lines to push the paper together into the starting shape. Everything should line up.", "tip": None},
+            {"step_number": 3, "title": "Build the Main Part", "instruction": f"Shape the biggest part of your {title} first. Fold the edges in and lift flaps up.", "tip": None},
+            {"step_number": 4, "title": "Add More Parts", "instruction": f"Now add the smaller parts and details that make your {title} look special.", "tip": "If you get lost, go back and check your fold lines."},
+            {"step_number": 5, "title": "Tiny Details", "instruction": f"Make really small, careful folds for the tiny details on your {title}.", "tip": None},
+            {"step_number": 6, "title": "Make It Pop", "instruction": f"Gently push and pull your {title} into its final 3D shape. Bend curves and fix angles.", "tip": None},
+            {"step_number": 7, "title": "Show It Off!", "instruction": f"Your {title} is done! Make any last little fixes and find a great spot to display it.", "tip": "Slightly damp paper can help make smoother curves!"},
         ]
 
 def get_steps(category, skill, title):
