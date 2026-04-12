@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
@@ -39,6 +40,13 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Reload stats every time screen comes into focus (e.g. after completing origami)
+  useFocusEffect(
+    useCallback(() => {
+      apiCall('/progress/stats').then(setStats).catch(console.error);
+    }, [])
+  );
 
   const onRefresh = () => { setRefreshing(true); loadData(); };
 
