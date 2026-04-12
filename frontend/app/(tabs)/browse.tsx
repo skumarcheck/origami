@@ -123,11 +123,6 @@ export default function BrowseScreen() {
                 <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.cardDesc} numberOfLines={2}>{item.is_premium && !canAccessPremium ? 'Unlock with Premium subscription' : item.description}</Text>
                 <View style={styles.cardMeta}>
-                  <View style={[styles.diffDots]}>
-                    {[1, 2, 3, 4, 5].map(d => (
-                      <View key={d} style={[styles.dot, d <= item.difficulty_rating ? { backgroundColor: item.color } : {}]} />
-                    ))}
-                  </View>
                   <Text style={styles.cardTime}>{item.estimated_time}</Text>
                 </View>
               </View>

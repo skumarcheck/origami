@@ -252,7 +252,7 @@ async def list_origami(skill_level: Optional[str] = None, season: Optional[str] 
     if skill_level:
         query["skill_level"] = skill_level
     if season and season != "all":
-        query["$or"] = [{"season": season}, {"season": "all"}]
+        query["season"] = season
     if holiday:
         query["holiday"] = holiday
     if search:
