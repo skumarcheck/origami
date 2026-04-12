@@ -1,22 +1,35 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "Foldiverse",
+    "slug": "foldiverse",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "foldiverse",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.foldiverse.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photos of your origami creations",
+        "NSPhotoLibraryUsageDescription": "Save origami photos to your gallery"
+      }
     },
     "android": {
+      "package": "com.foldiverse.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#38BDF8"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "com.android.vending.BILLING"
+      ],
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
@@ -31,14 +44,17 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#38BDF8"
         }
-      ],
-      "expo-video",
-      "expo-audio"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "foldiverse"
+      }
     }
   }
 }

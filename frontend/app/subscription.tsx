@@ -47,8 +47,10 @@ export default function SubscriptionScreen() {
         <View style={styles.crownCircle}>
           <Ionicons name="diamond" size={44} color="#EAB308" />
         </View>
-        <Text style={styles.title}>Origami World Pro</Text>
-        <Text style={styles.subtitle}>Unlock all premium video tutorials</Text>
+        <Text style={styles.title}>Foldiverse Pro</Text>
+        <Text style={styles.subtitle}>
+          <Text style={{ fontStyle: 'italic' }}>Start with paper. End with magic.</Text>
+        </Text>
       </View>
 
       {isActive && (

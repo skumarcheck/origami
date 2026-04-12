@@ -52,8 +52,10 @@ export default function RegisterScreen() {
           <View style={styles.iconCircle}>
             <Ionicons name="sparkles" size={40} color={Colors.secondary} />
           </View>
-          <Text style={styles.title}>Join Origami World!</Text>
-          <Text style={styles.subtitle}>Start your 1-month free trial</Text>
+          <Text style={styles.title}>Join Foldiverse!</Text>
+          <Text style={styles.subtitle}>
+            <Text style={{ fontStyle: 'italic' }}>Start with paper. End with magic.</Text>
+          </Text>
         </View>
 
         <View style={styles.trialBadge}>

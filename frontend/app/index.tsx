@@ -35,8 +35,10 @@ export default function LandingScreen() {
         <View style={styles.iconCircle}>
           <Ionicons name="diamond" size={60} color={Colors.primary} />
         </View>
-        <Text style={styles.title}>Origami World</Text>
-        <Text style={styles.subtitle}>Learn the magical art of paper folding!</Text>
+        <Text style={styles.title}>Foldiverse</Text>
+        <Text style={styles.subtitle}>
+          <Text style={{ fontStyle: 'italic', color: Colors.textMuted }}>Start with paper. End with magic.</Text>
+        </Text>
       </View>
 
       <View style={styles.featuresSection}>
