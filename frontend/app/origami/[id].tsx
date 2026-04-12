@@ -79,6 +79,39 @@ export default function OrigamiDetailScreen() {
   const isLastStep = currentStep >= steps.length - 1;
   const isCompleted = progress?.completed;
   const canAccessVideo = user?.subscription_status === 'trial' || user?.subscription_status === 'active';
+  const canAccessPremium = canAccessVideo;
+
+  // If premium and user can't access, show locked screen
+  if (origami.is_premium && !canAccessPremium) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.topBar}>
+          <TouchableOpacity testID="detail-back-btn" style={styles.backBtn} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={Colors.textMain} />
+          </TouchableOpacity>
+          <View style={{ width: 44 }} />
+        </View>
+        <ScrollView contentContainerStyle={[styles.content, { alignItems: 'center', paddingTop: 40 }]}>
+          <View style={[styles.heroIcon, { backgroundColor: origami.color + '20' }]}>
+            <Ionicons name="lock-closed" size={40} color={origami.color} />
+          </View>
+          <Text style={styles.title}>{origami.title}</Text>
+          <View style={{ backgroundColor: '#FDE047', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 6, marginTop: 12 }}>
+            <Text style={{ fontSize: 14, fontWeight: '800', color: '#92400E' }}>PREMIUM</Text>
+          </View>
+          <Text style={[styles.description, { marginTop: 16 }]}>This is a premium origami! Subscribe to unlock 185+ extra projects including this one.</Text>
+          <TouchableOpacity
+            testID="unlock-premium-btn"
+            style={{ backgroundColor: Colors.primary, borderRadius: 9999, paddingVertical: 16, paddingHorizontal: 40, borderBottomWidth: 4, borderBottomColor: Colors.primaryDark, marginTop: 24 }}
+            onPress={() => router.push('/subscription')}
+            activeOpacity={0.8}
+          >
+            <Text style={{ color: Colors.white, fontSize: 18, fontWeight: '800' }}>Unlock Premium</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -114,26 +147,11 @@ export default function OrigamiDetailScreen() {
           </View>
         </View>
 
-        {origami.has_video && (
-          <TouchableOpacity
-            testID="video-section-btn"
-            style={[styles.videoSection, !canAccessVideo && styles.videoLocked]}
-            onPress={() => {
-              if (canAccessVideo) {
-                router.push({ pathname: '/video', params: { id: origami.id } });
-              } else {
-                router.push('/subscription');
-              }
-            }}
-            activeOpacity={0.8}
-          >
-            <Ionicons name={canAccessVideo ? 'play-circle' : 'lock-closed'} size={28} color={canAccessVideo ? Colors.primary : '#94A3B8'} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.videoTitle}>{canAccessVideo ? 'Watch Video Tutorial' : 'Premium Video Locked'}</Text>
-              <Text style={styles.videoSubtitle}>{canAccessVideo ? 'Follow along with the AI instructor' : 'Subscribe to unlock video tutorials'}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
-          </TouchableOpacity>
+        {origami.is_premium && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FEF9C3', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 16, marginTop: 12, gap: 6 }}>
+            <Ionicons name="star" size={16} color="#EAB308" />
+            <Text style={{ fontSize: 13, fontWeight: '800', color: '#92400E' }}>Premium Origami</Text>
+          </View>
         )}
 
         <View style={styles.progressSection}>

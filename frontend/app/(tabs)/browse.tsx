@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { apiCall } from '../../utils/api';
 import { Colors } from '../../utils/colors';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   bird: 'paper-plane', airplane: 'airplane', boat: 'boat', paw: 'paw',
@@ -22,11 +23,14 @@ const SKILL_FILTERS = [
 export default function BrowseScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [origamis, setOrigamis] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+
+  const canAccessPremium = user?.subscription_status === 'trial' || user?.subscription_status === 'active';
 
   const loadData = useCallback(async () => {
     try {
@@ -97,20 +101,27 @@ export default function BrowseScreen() {
               key={item.id}
               testID={`origami-card-${item.id}`}
               style={styles.card}
-              onPress={() => router.push(`/origami/${item.id}`)}
+              onPress={() => {
+                if (item.is_premium && !canAccessPremium) {
+                  router.push('/subscription');
+                } else {
+                  router.push(`/origami/${item.id}`);
+                }
+              }}
               activeOpacity={0.8}
             >
               <View style={[styles.cardIcon, { backgroundColor: item.color + '20' }]}>
                 <Ionicons name={ICON_MAP[item.icon_name] || 'diamond'} size={36} color={item.color} />
                 {item.is_premium && (
-                  <View style={styles.proBadge}>
+                  <View style={[styles.proBadge, !canAccessPremium && { backgroundColor: '#94A3B8' }]}>
+                    <Ionicons name={canAccessPremium ? 'star' : 'lock-closed'} size={9} color={Colors.white} />
                     <Text style={styles.proBadgeText}>PRO</Text>
                   </View>
                 )}
               </View>
-              <View style={styles.cardInfo}>
+              <View style={[styles.cardInfo, item.is_premium && !canAccessPremium && { opacity: 0.6 }]}>
                 <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-                <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+                <Text style={styles.cardDesc} numberOfLines={2}>{item.is_premium && !canAccessPremium ? 'Unlock with Premium subscription' : item.description}</Text>
                 <View style={styles.cardMeta}>
                   <View style={[styles.diffDots]}>
                     {[1, 2, 3, 4, 5].map(d => (

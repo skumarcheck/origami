@@ -70,11 +70,11 @@ export default function SubscriptionScreen() {
       <View style={styles.benefitsCard}>
         <Text style={styles.benefitsTitle}>What You Get</Text>
         {[
-          { icon: 'videocam' as const, text: 'All premium video tutorials' },
-          { icon: 'people' as const, text: 'AI instructor walkthroughs' },
-          { icon: 'infinite' as const, text: 'Unlimited access to all origami' },
-          { icon: 'star' as const, text: 'Early access to new projects' },
-          { icon: 'gift' as const, text: 'Exclusive seasonal content' },
+          { icon: 'diamond' as const, text: '185+ extra origami projects' },
+          { icon: 'paw' as const, text: 'Rare animals: Snow Leopard, Axolotl, Narwhal' },
+          { icon: 'flower' as const, text: 'Beautiful flowers: Sakura, Orchid, Bird of Paradise' },
+          { icon: 'gift' as const, text: 'Holiday specials: Christmas, Halloween, Easter' },
+          { icon: 'star' as const, text: 'New premium projects added every month' },
         ].map((item, i) => (
           <View key={i} style={styles.benefitRow}>
             <Ionicons name={item.icon} size={20} color={Colors.primary} />
