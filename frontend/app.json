@@ -10,11 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.foldiverse.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Take photos of your origami creations",
-        "NSPhotoLibraryUsageDescription": "Save origami photos to your gallery"
-      }
+      "bundleIdentifier": "com.foldiverse.app"
     },
     "android": {
       "package": "com.foldiverse.app",
@@ -24,9 +20,6 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
         "com.android.vending.BILLING"
       ],
       "versionCode": 1
